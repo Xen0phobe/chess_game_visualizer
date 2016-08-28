@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="
+                                  ,-.
+             ___,---.__          /'|`\          __,---,___
+          ,-'    \`    `-.____,-'  |  `-.____,-'    //    `-.
+        ,'        |           ~'\     /`~           |        `.
+       /      ___//              `. ,'          ,  , \___      \
+      |    ,-'   `-.__   _         |        ,    __,-'   `-.    |
+      |   /          /\_  `   .    |    ,      _/\          \   |
+      \  |           \ \`-.___ \   |   / ___,-'/ /           |  /
+       \  \           | `._   `\  |  //'   _,' |           /  /
+        `-.\         /'  _ `---'' , . ``---' _  `\         /,-'
+           ``       /     \    ,='/ \`=.    /     \       ''
+                   |__   /|\_,--.,-.--,--._/|\   __|
+                   /  `./  \`\ |  |  | /,//' \,'  \
+                  /   /     ||--+--|--+-/-|     \   \
+                 |   |     /'\_\_\ | /_/_/`\     |   |
+                  \   \__, \_     `~'     _/ .__/   /
+                   `-._,-'   `-._______,-'   `-._,-'
+
+      FILE: index.html
+      TITLE: Chess Game Visualizer
+      AUTHOR: Taylor Lovell Shockey
+      AUTHOR WEBSITE: Strategic.International
+      AUTHOR EMAIL: Taylor.Shockey@Strategic.International">
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <title>Chess Game Visualizer</title>
+    <link href="css/chessboard.css" rel="stylesheet">
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script> -->
+    <style>
+        body {
+            font-family: "Helvetica Neue";
+            font-size: 14px;
+        }
+        #instructions ul {
+            padding-left: 12px;
+            list-style-position: outside;
+            margin: 0px;
+            margin-bottom: 10px;
+        }
+        #instructions ul li {
+            margin: 5px;
+            margin-right: 0px;
+            padding: 5px;
+            padding-right: 0px;
+        }
+        h1 {
+            margin: 0px;
+        }
+        .name a:link {
+            color: lightgrey;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .name a:visited {
+            color: lightgrey;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .name a:hover {
+            color: black;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .name a:active {
+            color: yellow;
+            background-color: lightgrey;
+            text-decoration: none;
+        }
+        table { 
+            page-break-inside:auto;
+        }
+        tr { 
+            display:block;
+            page-break-inside:avoid; 
+            page-break-after:auto; 
+        }
+        @font-face {
+            font-family: player_two;
+            /*src: url(fonts/PressStart2P.ttf);*/
+            src: url("https://fonts.gstatic.com/s/pressstart2p/v4/8Lg6LX8-ntOHUQnvQ0E7o08SWvhA5BcWCS8xVZDIH7E.woff2") format("woff");
+        }
+        #results_title {
+            width: 870px;
+            text-align: center;
+            font-family: player_two;
+        }
+        .stroked_text {
+            color: black;
+            -webkit-text-fill-color: white;   /*Will override color (regardless of order). The reason I have black above is for browsers that don't support webkit.*/ 
+            -webkit-text-stroke-width: 1px;
+            -webkit-text-stroke-color: black;
+            -webkit-font-smoothing: antialiased;
+        }
+        .grey_text {
+            color: grey;
+        }
+        .ui {
+            display: none;
+        }
+        .board {
+            opacity: 0.0;
+            position:absolute;
+        }
+        #beta {
+            position: absolute;
+            font-family: player_two;
+            /*padding-top: 100px;*/
+            font-size: 10px;
+            /*margin-left: -50px;*/
+            -ms-transform: rotate(7deg); /* IE 9 */
+            -webkit-transform: rotate(7deg); /* Chrome, Safari, Opera */
+            transform: rotate(7deg);
+            left: 280px;
+            margin-top: -40px;
+            color: red;
+        }
+        .tooltip {
+            position: relative;
+            /*display: inline-block;*/
+        }
+        .tooltip .tooltiptext {
+            font-family: "Helvetica Neue";
+            visibility: hidden;
+            -ms-transform: rotate(-7deg); /* IE 9 */
+            -webkit-transform: rotate(-7deg); /* Chrome, Safari, Opera */
+            transform: rotate(-7deg);
+            width: 120px;
+            background-color: lightgrey;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            top: -5px;
+            left: 110%;
+            margin-top: -25px;
+        }
+        .tooltip .tooltiptext a:link {
+            color: black;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .tooltip .tooltiptext a:visited {
+            color: black;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .tooltip .tooltiptext a:hover {
+            color: red;
+            background-color: transparent;
+            text-decoration: none;
+        }
+        .tooltip .tooltiptext a:active {
+            color: yellow;
+            background-color: lightgrey;
+            text-decoration: none;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 100%;
+            margin-top: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent lightgrey transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui" id="textarea_and_board" style="display: inline-block; margin-bottom: 40px">
+        <div id="left_div" style="float: left; margin-left: 8px; margin-right: 3px; width: 300px;">
+            <div id="logo_div" style="width: 300px; height: 150px; margin-bottom: 10px;">
+                <a href="http://strategic.international/" target="_blank"><img src="img/SI_Logo_small_cropped.png" style="width: 150px; height: 150px; float: left;"></img></a>
+                <div id="title_div" style="width: 150px; float: left;">
+                    <h1 style="padding-left: 10px; padding-top: 20px;">Chess Game Visualizer</h1>
+                    <div id="beta" class="tooltip">
+                        (beta)
+                        <div class="tooltiptext">
+                            <ul>
+                                <li><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">github</a></li>
+                                <li><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">feedback</a></li>
+                                <li><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">standalone</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="name" style="font-size: 10px; float: left; padding-right: 15px; margin-top: 5px;"><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">by: Taylor Lovell Shockey</a></p>
+                </div>
+            </div>
+            <div class="ui" id="instructions" style="width: 300px;">
+                <ul class="ui">
+                    <li class="ui"> <strong>Give:</strong> Chess PGN (Portable Game Notation) in the text box.</li>
+                    <li class="ui"><strong>Get:</strong> A table of images depicting how the chessboard will look after each move.</li>
+                </ul>
+            </div>
+            <textarea class="ui" id="pgn_textarea" style="width: 294px; height: 290px;"></textarea>
+            <button class="ui" id="submit_button" type="button" onclick="run_it();" style="font-size: 14px; font-family: 'Helvetica Neue'; float: right; margin-top: 5px;">Submit</button>
+        </div>
+        <div id="right_div" style="float: right; width: 500px; padding-left: 100px; margin-top: 50px;">
+            <!-- <div id="beta">(beta)</div> -->
+            <!-- <div id="feedback_and_standalone">feedback</div> -->
+<!--             <div id="feedback">feedback</div>
+            <div id="standalone">standalone</div> -->
+        </div>
+<!--        <div class="ui" id="board" style="float: right; width: 560px;"></div> --> 
+    </div>
+    <div class="board" id="board" style="width: 560px;"></div>
+    <div id="results_title"></div>
+    <div id="results" style="width: 870px; margin-left: 0px; margin-top: 5px;"></div>
+    <script src="js/json3.min.js"></script> 
+    <script src="js/jquery-1.10.1.min.js"></script> 
+    <script src="js/chessboard.js"></script>
+    <script src="js/html2canvas.js"></script>
+    <script src="js/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.2.0/imagesloaded.pkgd.min.js"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){  // Google Analytics Stuff.
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-73093302-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <script>
+        $(document).ready(function() {
+            ChessBoard('board', 'start');  // Create the global variable, jsboard.
+            run_it();
+        });
+
+        var get_pgn_textarea = function() {
+            pgn_textarea_value = document.getElementById("pgn_textarea").value;
+            document.getElementById("pgn_textarea").defaultValue = pgn_textarea_value;  // Set the defaultValue of the text area to be whatever was in the text area when the submit button was pressed. This prevents the text from being cleared when the page refreshes.
+            return pgn_textarea_value;
+        }
+
+        var pgn_to_fen = function(pgn_string) {
+            pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');
+            var chess = new Chess();
+            var is_load_successful = chess.load_pgn(pgn_string);
+            var history = chess.history();
+            if (is_load_successful == false) {
+                var turns = Math.ceil((history.length + 1)/2);
+                console.log("Turn " + turns + " had an illegal move. Truncating game to this point.");
+            }
+            var chess_history = new Chess();
+            var moves = chess_history.moves();  // moves is an array of the possible moves from a given position.
+            var fen_array = [];
+            for (i = 0; i < history.length; i++) {
+                var turn = Math.ceil((i + 1)/2);
+                console.log("Turn: " + turn);
+                console.log("Move made: " + history[i]);
+                chess_history.move(history[i]);
+                console.log(chess_history.ascii());
+                moves = chess_history.moves();
+                console.log("Possible moves from this position: " + moves);
+                var fen = chess_history.fen();
+                var is_valid = chess_history.validate_fen(fen);
+                console.log(is_valid);
+                fen_array.push(fen);
+            }
+            var header = chess.header();
+            // console.log("The pgn from the chess object is " + chess.pgn());
+            return [fen_array, history, header, pgn_string];
+        }
+
+        var make_boards = function(fen_array, history){
+            var q = 0;
+            table_clear();
+            table_insert();
+            var row_id = row_insert(0);
+            make_boards_recursive_loop(fen_array, row_id, history, q);
+        }
+
+        function insert_remaining_comments(fen_array, q){
+            console.log("Im in the insert_remaining_comments function and I'm about to fuck shit up.");
+            var have_you_created_a_comment_row = 0;
+            q = q - 1;
+            var first_q_in_row = q - q % 6;
+            var last_q_in_row = q + 6;
+            for (i = first_q_in_row + 1; i <= last_q_in_row; i++) {
+                $.each(comment_obj, function(key, value) {  // Javascript doesn't have a native foreach function like Python. Jquery has one.
+                    console.log("The key is " + key + " and the value is " + value);
+                    key_num = +(String(key).replace(/\D/g, ''));  // The little + casts the string as an int.
+                    console.log("The key_num is " + key_num);
+                    key_q_num = key_num * 2;
+                    console.log("key_q_num is " + key_q_num + " and first_q_in_row is " + first_q_in_row);
+                    if (key_q_num == i) {
+                        if (have_you_created_a_comment_row == 0) {
+                            console.log("Creating a final comments row");
+                            var y = document.createElement("TR");
+                            var row_id = "comment_row" + q;
+                            y.setAttribute("id", row_id);
+                            document.getElementById("myTable").appendChild(y);
+                            var z = document.createElement("TD");
+                            var data_id = "comment" + q;
+                            z.setAttribute("id", data_id);
+                            var x = document.createElement("UL");
+                            var ul_id = "ul" + q;
+                            x.setAttribute("id", ul_id);
+                            z.appendChild(x);
+                            y.appendChild(z);
+                            document.getElementById("myTable").appendChild(y);
+                            have_you_created_a_comment_row = 1;
+                        }
+                        var comment_text1 = document.createTextNode("Turn " + key_num + " move " + comment_obj[key][0] + ": ");
+                        var comment_text2 = document.createTextNode(comment_obj[key][1]);
+                        var spanling = document.createElement("SPAN");
+                        spanling.setAttribute("style", "font-weight: bold; color: black;");
+                        spanling.appendChild(comment_text1);
+                        var li = document.createElement("LI");
+                        li.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
+                        li.appendChild(spanling);
+                        li.appendChild(comment_text2);
+                        // li.appendChild(comment_text);
+                        document.getElementById("ul" + q).appendChild(li);
+                    }
+                });
+            }
+        }
+
+        var make_boards_recursive_loop = function(fen_array, row_id, history, q){
+            if(q == fen_array.length) {
+                insert_remaining_comments(fen_array, q);
+                return;
+            }
+            $(".piece-417db").remove();
+            ChessBoard('board', fen_array[q]);
+            html2canvas($("#board")).then(function(canvas) {
+                console.log("q is " + q);
+                var row_remainder = (q+1) % 6;
+                var turn_remainder = (q+1) % 2;
+                var source = canvas.toDataURL();
+                var z = document.createElement("TD");
+                z_id = "z" + q;
+                z.setAttribute("id", z_id);
+                z.setAttribute("align", top);
+                var img = document.createElement("IMG");
+                var move_text = document.createTextNode(history[q]);
+                var p = document.createElement("P");
+                p.setAttribute("style", "margin: 0; padding: 0; text-align: center; font-size: 20px;");
+                p.appendChild(move_text);
+                img.setAttribute("src", source);
+                var board_id = "board" + q;
+                img.setAttribute("alt", board_id);
+                img.setAttribute("height", "140px");
+                img.setAttribute("width", "140px");
+                z.appendChild(img);
+                z.appendChild(p);
+                document.getElementById(row_id).appendChild(z);
+                if (row_remainder == 0 && q < fen_array.length - 1) {
+                    console.log("inserting row");
+                    row_id = row_insert(q);
+                }
+                if (turn_remainder != 0){
+                    var turn = Math.ceil((q+1)/2);
+                    var turn_text = document.createTextNode("Turn: " + turn);
+                    var p2 = document.createElement("P");
+                    p2.setAttribute("style", "margin: 0; padding: 0; text-color: lightgrey;");
+                    p2.appendChild(turn_text);
+                    document.getElementById(z_id).insertBefore(p2, document.getElementById(z_id).childNodes[0]);
+                }
+                else{
+                    var br = document.createElement("br");
+                    document.getElementById(z_id).insertBefore(br, document.getElementById(z_id).childNodes[0]);
+                }
+                q++;
+                make_boards_recursive_loop(fen_array, row_id, history, q);  // Recurse.
+            });
+        }
+
+        function table_clear() {
+            var elementExists = document.getElementById("myTable");
+            if (elementExists != null) {
+                document.getElementById("myTable").remove();
+            }
+        }
+
+        function table_insert() {
+            var x = document.createElement("TABLE");
+            x.setAttribute("id", "myTable");
+            x.setAttribute("style", "margin: 0px; border-spacing: 3px;")
+            document.getElementById("results").appendChild(x);
+        }
+
+        function row_insert(row_number) {  // Note that row_number actually refers to q.
+            insert_comments(row_number);
+            var y = document.createElement("TR");
+            var row_id = "myTr" + row_number;
+            y.setAttribute("id", row_id);
+            document.getElementById("myTable").appendChild(y);
+            return row_id;
+        }
+
+        function insert_comments(q) {
+            console.log("A row is going to be inserted and q is " + q);
+            if (q != 0) {
+                turn_number = (q + 1) / 2;
+            }
+            else {
+                turn_number = 0;
+            }
+            console.log("this is turn number " + turn_number);
+            var have_you_created_a_comment_row = 0;
+            for (i = turn_number - 2; i <= turn_number; i++) {
+                if (i in comment_obj) {
+                    if (have_you_created_a_comment_row == 0) {
+                        console.log("There's a comment in turn " + i);
+                        var y = document.createElement("TR");
+                        var row_id = "comment_row" + q;
+                        y.setAttribute("id", row_id);
+                        document.getElementById("myTable").appendChild(y);
+                        var z = document.createElement("TD");
+                        var data_id = "comment" + q;
+                        z.setAttribute("id", data_id);
+                        var x = document.createElement("UL");
+                        var ul_id = "ul" + q;
+                        x.setAttribute("id", ul_id);
+                        z.appendChild(x);
+                        y.appendChild(z);
+                        document.getElementById("myTable").appendChild(y);
+                        have_you_created_a_comment_row = 1;
+                    }
+                    var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i][0] + ": ");
+                    var comment_text2 = document.createTextNode(comment_obj[i][1]);
+                    var spanling = document.createElement("SPAN");
+                    spanling.setAttribute("style", "font-weight: bold; color: black;");
+                    spanling.appendChild(comment_text1);
+                    var li = document.createElement("LI");
+                    li.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
+                    li.appendChild(spanling);
+                    li.appendChild(comment_text2);
+                    // li.appendChild(comment_text);
+                    document.getElementById("ul" + q).appendChild(li);
+                    if (i + "B" in comment_obj) {
+                        console.log("There's a move for black here as well!");
+                        var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i + "B"][0] + ": ");
+                        var comment_text2 = document.createTextNode(comment_obj[i + "B"][1]);
+                        var spanling = document.createElement("SPAN");
+                        spanling.setAttribute("style", "font-weight: bold; color: black;");
+                        spanling.appendChild(comment_text1);
+                        var li = document.createElement("LI");
+                        li.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
+                        li.appendChild(spanling);
+                        li.appendChild(comment_text2);
+                        // li.appendChild(comment_text);
+                        document.getElementById("ul" + q).appendChild(li);
+                    }
+                }
+            }
+        }
+
+        function make_header(header) {
+            clear_header();
+            console.log(header);
+            var new_header = [];
+            // $.each(header, function(key, value) {  // Javascript doesn't have a native foreach function like Python. Jquery has one.
+            //     var space = value.indexOf(" ");
+            //     header[key] = value.slice(space + 2, -2);
+            // });
+            if ("Date" in header) {
+                var text2 = document.createTextNode(header["Date"]);
+                var p2 = document.createElement("DIV");
+                p2.setAttribute("id", "results_header_p2");
+                p2.setAttribute("class", "grey_text");
+                p2.setAttribute("style", "align: center; position: relative; display: inline-block; width: 870px; margin-bottom: 8px;");
+                p2.appendChild(text2);
+                document.getElementById("results_title").appendChild(p2); 
+            };
+            if ("White" in header && "Black" in header) {
+                var text_white = document.createTextNode(header["White"]);
+                var text_black = document.createTextNode(header["Black"]);
+                var text_vs = document.createTextNode(" vs ");
+                var div_white = document.createElement("DIV");
+                div_white.setAttribute("class", "stroked_text");
+                div_white.setAttribute("style", "font-size: 18px; float:left; width: 400px; text-align: right;");
+                div_white.appendChild(text_white);
+                var div_black = document.createElement("DIV");
+                div_black.setAttribute("style", "font-size: 18px; float: right; width: 400px; text-align: left;");
+                div_black.appendChild(text_black);
+                var div_vs = document.createElement("DIV");
+                div_vs.setAttribute("class", "grey_text");
+                div_vs.setAttribute("style", "display: inline-block; width: 50px; align: center; margin: 0 auto;");
+                div_vs.appendChild(text_vs);
+                var p = document.createElement("DIV");
+                p.setAttribute("id", "results_header_p");
+                p.setAttribute("style", "text-align: center; width: 870px; margin-bottom: 40px;");
+                p.appendChild(div_white);
+                p.appendChild(div_vs);
+                p.appendChild(div_black);
+                document.getElementById("results_title").appendChild(p);
+            };
+        }
+
+        function clear_header() {
+            var header_elementExists = document.getElementById("results_header_p");
+            var header2_elementExists = document.getElementById("results_header_p2");
+            if (header_elementExists != null) {
+                document.getElementById("results_header_p").remove();
+            }
+            if (header2_elementExists != null) {
+                document.getElementById("results_header_p2").remove();
+            }  
+        }
+
+        function isolate_comments(pgn_string) {
+            console.log("pgn string is " + pgn_string);
+            var x = 0;
+            comment_obj = {};
+            while (true) {
+                var s1 = pgn_string.indexOf("{", x)
+                if (s1 != -1) {
+                    var s2 = pgn_string.indexOf("}", s1);
+                    var period = pgn_string.lastIndexOf(".", s1);
+                    var previous_close_bracket = pgn_string.lastIndexOf("}", s1 - 1);
+                    if (previous_close_bracket > period) {  // Check to see whether or not there is a closing bracket with an index higher than the period but lower than s1. This will indicate that there was another comment on the same turn that occured before this one.
+                        var previous_open_bracket = pgn_string.lastIndexOf("{", previous_close_bracket - 1);
+                        period = pgn_string.lastIndexOf(".", previous_open_bracket - 1);
+                    }
+                    // var beginning_of_number = pgn_string.lastIndexOf(" ", period);
+                    var beginning_of_number = 0;
+                    var go_back_characters = 1;
+                    console.log("About to attempt to isolate the beginning of the turn number.");
+                    while (true) {
+                        var is_number = pgn_string.slice(period - go_back_characters, period - go_back_characters + 1);  // Goes back character by character to find the first caracter that's not a number.
+                        console.log("is_numebr is " + is_number);
+                        is_number = String(is_number);
+                        if (is_number.search(/[0-9]/) != -1) {
+                            console.log("True");
+                        }
+                        else {
+                            console.log("False");
+                            beginning_of_number = period - go_back_characters;
+                            break;
+                        }
+                        go_back_characters += 1;
+                    }
+                    var move_end = pgn_string.lastIndexOf(" ", s1);
+                    if (move_end != s1 - 1) {
+                        move_end = s1;
+                    }
+                    var possible_move_beginning_space = pgn_string.lastIndexOf(" ", move_end - 1);
+                    var possible_move_beginning_period = pgn_string.lastIndexOf(".", move_end - 1);
+                    if (possible_move_beginning_space > possible_move_beginning_period) {
+                        var move_beginning = possible_move_beginning_space;
+                    }
+                    else {
+                        var move_beginning = possible_move_beginning_period;
+                    }
+                    // var move_beginning = pgn_string.lastIndexOf(".", move_end - 1);  // HERE!
+                    var number = pgn_string.slice(beginning_of_number + 1, period);
+                    var comment = pgn_string.slice(s1 + 1, s2);
+                    var move = pgn_string.slice(move_beginning + 1, move_end);
+                    // console.log("MOVE BEGINNING AND END " + move_beginning + " " + move_end);
+                    if (number in comment_obj) {
+                        comment_obj[number + "B"] = [move, comment];
+                    }
+                    else {
+                        comment_obj[number] = [move, comment];
+                    }
+                    x = s2;
+                }
+                else {
+                    break;
+                }
+            }
+            console.log(comment_obj);
+
+        }
+
+        var remove_newlines = function(pgn_string) {
+            var index_last_bracket = pgn_string.lastIndexOf("]");
+            if (index_last_bracket != -1) {
+                var first_turn = pgn_string.indexOf("1.", index_last_bracket);
+                var just_the_moves = pgn_string.slice(first_turn);
+                var just_the_header = pgn_string.slice(0, index_last_bracket + 1)
+                just_the_moves = just_the_moves.replace(/(\r\n|\n|\r)/gm," "); // Removes newlines and replaces them with spaces.
+                pgn_string = just_the_header + "\n" + just_the_moves;
+                console.log("A header has been detected. The new pgn string is " + pgn_string);
+            }
+            else {
+                pgn_string = pgn_string.replace(/(\r\n|\n|\r)/gm," ");
+                console.log("No header has been detected. The new pgn string is " + pgn_string);
+            }
+            return pgn_string;
+        }
+
+        function url_decode(str) {
+           return decodeURIComponent((str+'').replace(/\+/g, '%20'));
+        }
+
+        var run_it = function() {
+            // var raw_text = get_pgn_textarea();
+            var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22New+York%2C+NY+USA%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BEventDate+%221956.10.07%22%5D%0D%0A%5BRound+%228%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhite+%22Donald+Byrne%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer%22%5D%0D%0A%5BECO+%22D92%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4%0D%0A7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5+%7B11.+Be2%0D%0Afollowed+by+12+O-O+would+have+been+more+prudent.+The+bishop%0D%0Amove+played+allows+a+sudden+crescendo+of+tactical+points+to+be%0D%0Auncovered+by+Fischer.+--+Wade%7D+Na4+%7B%21%7D+12.+Qa3+%7BOn+12.+Nxa4%0D%0ANxe4+and+White+faces+considerable+difficulties.%7D+Nxc3+%7BAt%0D%0Afirst+glance%2C+one+might+think+that+this+move+only+helps+White%0D%0Acreate+a+stronger+pawn+center%3B+however%2C+Fischer%27s+plan+is%0D%0Aquite+the+opposite.+By+eliminating+the+Knight+on+c3%2C+it%0D%0Abecomes+possible+to+sacrifice+the+exchange+via+Nxe4+and+smash%0D%0AWhite%27s+center%2C+while+the+King+remains+trapped+in+the+center.%7D%0D%0A13.+bxc3+Nxe4+%7BThe+natural+continuation+of+Black%27s+plan.%7D%0D%0A14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+%7B%21%21+If%0D%0Athis+is+the+game+of+the+century%2C+then+17...Be6%21%21+must+be+the%0D%0Acounter+of+the+century.+Fischer+offers+his+queen+in+exchange%0D%0Afor+a+fierce+attack+with+his+minor+pieces.+Declining+this%0D%0Aoffer+is+not+so+easy%3A+18.+Bxe6+leads+to+a+%27Philidor+Mate%27%0D%0A%28smothered+mate%29+with+...Qb5%2B+19.+Kg1+Ne2%2B+20.+Kf1+Ng3%2B%0D%0A21.+Kg1+Qf1%2B+22.+Rxf1+Ne2%23.+Other+ways+to+decline+the+queen%0D%0Aalso+run+into+trouble%3A+e.g.%2C+18.+Qxc3+Qxc5%7D+18.+Bxb6+Bxc4%2B%0D%0A19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+%7BThis+tactical+scenario%2C+where+a%0D%0Aking+is+repeatedly+revealed+to+checks%2C+is+sometimes+called+a%0D%0A%22windmill.%22%7D+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4%0D%0ARa4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1+Rxe1%0D%0A29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3+Ne4+32.+Qb8+b5+%7BEvery+piece%0D%0Aand+pawn+of+the+black+camp+is+defended.+The+white+queen+has%0D%0Anothing+to+do.%7D+33.+h4+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1%0D%0ANg3%2B+%7BNow+Byrne+is+hopelessly+entangled+in+Fischer%27s+mating%0D%0Anet.%7D+37.+Ke1+Bb4%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B%0D%0A41.+Kc1+Rc2%23+0-1")
+            var edited_text = remove_newlines(raw_text);
+            var game_arrays = pgn_to_fen(edited_text);  // Function result being passed as the argument for another function.
+            var fen_array = game_arrays[0];
+            var history = game_arrays[1];
+            var header = game_arrays[2];
+            var pgn_string = game_arrays[3];
+            isolate_comments(pgn_string);
+            make_header(header);
+            if ($.isEmptyObject(history) != true) {
+                make_boards(fen_array, history);
+            }
+        }
+
+    </script>
+</body>
+</html>

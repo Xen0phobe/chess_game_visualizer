@@ -24,7 +24,42 @@
       TITLE: Chess Game Visualizer
       AUTHOR: Taylor Lovell Shockey
       AUTHOR WEBSITE: Strategic.International
-      AUTHOR EMAIL: Taylor.Shockey@Strategic.International">
+      AUTHOR EMAIL: Taylor.Shockey@Strategic.International
+
+	The Clear BSD License
+
+	Copyright (c) 2016, Taylor Lovell Shockey
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted (subject to the limitations in the disclaimer
+	below) provided that the following conditions are met:
+
+	* Redistributions of source code must retain the above copyright notice, this
+	  list of conditions and the following disclaimer.
+
+	* Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation
+	  and/or other materials provided with the distribution.
+
+	* Neither the name of the copyright holder nor the names of its contributors may be used
+	  to endorse or promote products derived from this software without specific
+	  prior written permission.
+
+	NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+	LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+	'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+	THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+	GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+	LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+	OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+	DAMAGE.
+
+	The Strategic_International_Logo is a trade mark of Taylor Lovell Shockey.">
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <title>Chess Game Visualizer</title>
@@ -173,13 +208,28 @@
         .tooltip:hover .tooltiptext {
             visibility: visible;
         }
+        .tooltip .hoverarea {
+        	visibility: hidden;
+        	opacity: 0.0;
+        	background-color: green;
+        	position: absolute;
+        	width: 120px;
+        	height: 63px;
+            -ms-transform: rotate(-7deg); /* IE 9 */
+            -webkit-transform: rotate(-7deg); /* Chrome, Safari, Opera */
+            transform: rotate(-7deg);
+            margin-top: -37px;
+        }
+        .tooltip:hover .hoverarea {
+        	visibility: visible;
+        }
     </style>
 </head>
 <body>
     <div class="ui" id="textarea_and_board" style="display: inline-block; margin-bottom: 40px">
         <div id="left_div" style="float: left; margin-left: 8px; margin-right: 3px; width: 300px;">
             <div id="logo_div" style="width: 300px; height: 150px; margin-bottom: 10px;">
-                <a href="http://strategic.international/" target="_blank"><img src="img/SI_Logo_small_cropped.png" style="width: 150px; height: 150px; float: left;"></img></a>
+                <a href="http://strategic.international/" target="_blank"><img src="img/Strategic_International_Logo.png" style="width: 150px; height: 150px; float: left;"></img></a>
                 <div id="title_div" style="width: 150px; float: left;">
                     <h1 style="padding-left: 10px; padding-top: 20px;">Chess Game Visualizer</h1>
                     <div id="beta" class="tooltip">
@@ -191,6 +241,7 @@
                                 <li><a href="http://strategic.international/chess_game_visualizer" target="_blank">standalone</a></li>
                             </ul>
                         </div>
+                        <div class="hoverarea"></div>
                     </div>
                     <p class="name" style="font-size: 10px; float: left; padding-right: 15px; margin-top: 5px;"><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">by: Taylor Lovell Shockey</a></p>
                 </div>
@@ -311,7 +362,7 @@
                             document.getElementById("myTable").appendChild(y);
                             have_you_created_a_comment_row = 1;
                         }
-                        var comment_text1 = document.createTextNode("Turn " + key_num + " move " + comment_obj[key][0] + ": ");
+                        var comment_text1 = document.createTextNode("Turn " + key_num + " move " + comment_obj[key][0].replace(/\?|\!/g, "") + ": ");
                         var comment_text2 = document.createTextNode(comment_obj[key][1]);
                         var spanling = document.createElement("SPAN");
                         spanling.setAttribute("style", "font-weight: bold; color: black;");
@@ -429,7 +480,7 @@
                         document.getElementById("myTable").appendChild(y);
                         have_you_created_a_comment_row = 1;
                     }
-                    var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i][0] + ": ");
+                    var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i][0].replace(/\?|\!/g, "") + ": ");
                     var comment_text2 = document.createTextNode(comment_obj[i][1]);
                     var spanling = document.createElement("SPAN");
                     spanling.setAttribute("style", "font-weight: bold; color: black;");
@@ -597,11 +648,32 @@
            return decodeURIComponent((str+'').replace(/\+/g, '%20'));
         }
 
+        function handle_variations(pgn_string) {
+        	var reg = /(} *\([^)]*\))+/g;
+        	var new_pgn_string = pgn_string;
+        	while ((array = reg.exec(pgn_string)) !== null) {
+        		console.log(array.index + " " + array[0] + " " + (array.index + array[0].length));
+        		new_pgn_string = new_pgn_string.replace_at_index(array.index, " ");
+        		new_pgn_string = new_pgn_string.replace_at_index(array.index + array[0].length, "}")
+        	}
+        	new_pgn_string = new_pgn_string.replace(/  /g, "");
+        	new_pgn_string = new_pgn_string.replace(/\)\}/g, ") } ");
+        	new_pgn_string = new_pgn_string.replace(/\} [0-9]*\.\.\./g, "}");
+        	console.log(new_pgn_string);
+        	return new_pgn_string;
+        }
+
+		String.prototype.replace_at_index = function(index, character) {
+		    return this.substr(0, index) + character + this.substr(index+character.length);
+		}
+
         var run_it = function() {
             // var raw_text = get_pgn_textarea();
-            var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22New+York%2C+NY+USA%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BEventDate+%221956.10.07%22%5D%0D%0A%5BRound+%228%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhite+%22Donald+Byrne%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer%22%5D%0D%0A%5BECO+%22D92%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4%0D%0A7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5+%7B11.+Be2%0D%0Afollowed+by+12+O-O+would+have+been+more+prudent.+The+bishop%0D%0Amove+played+allows+a+sudden+crescendo+of+tactical+points+to+be%0D%0Auncovered+by+Fischer.+--+Wade%7D+Na4+%7B%21%7D+12.+Qa3+%7BOn+12.+Nxa4%0D%0ANxe4+and+White+faces+considerable+difficulties.%7D+Nxc3+%7BAt%0D%0Afirst+glance%2C+one+might+think+that+this+move+only+helps+White%0D%0Acreate+a+stronger+pawn+center%3B+however%2C+Fischer%27s+plan+is%0D%0Aquite+the+opposite.+By+eliminating+the+Knight+on+c3%2C+it%0D%0Abecomes+possible+to+sacrifice+the+exchange+via+Nxe4+and+smash%0D%0AWhite%27s+center%2C+while+the+King+remains+trapped+in+the+center.%7D%0D%0A13.+bxc3+Nxe4+%7BThe+natural+continuation+of+Black%27s+plan.%7D%0D%0A14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+%7B%21%21+If%0D%0Athis+is+the+game+of+the+century%2C+then+17...Be6%21%21+must+be+the%0D%0Acounter+of+the+century.+Fischer+offers+his+queen+in+exchange%0D%0Afor+a+fierce+attack+with+his+minor+pieces.+Declining+this%0D%0Aoffer+is+not+so+easy%3A+18.+Bxe6+leads+to+a+%27Philidor+Mate%27%0D%0A%28smothered+mate%29+with+...Qb5%2B+19.+Kg1+Ne2%2B+20.+Kf1+Ng3%2B%0D%0A21.+Kg1+Qf1%2B+22.+Rxf1+Ne2%23.+Other+ways+to+decline+the+queen%0D%0Aalso+run+into+trouble%3A+e.g.%2C+18.+Qxc3+Qxc5%7D+18.+Bxb6+Bxc4%2B%0D%0A19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+%7BThis+tactical+scenario%2C+where+a%0D%0Aking+is+repeatedly+revealed+to+checks%2C+is+sometimes+called+a%0D%0A%22windmill.%22%7D+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4%0D%0ARa4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1+Rxe1%0D%0A29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3+Ne4+32.+Qb8+b5+%7BEvery+piece%0D%0Aand+pawn+of+the+black+camp+is+defended.+The+white+queen+has%0D%0Anothing+to+do.%7D+33.+h4+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1%0D%0ANg3%2B+%7BNow+Byrne+is+hopelessly+entangled+in+Fischer%27s+mating%0D%0Anet.%7D+37.+Ke1+Bb4%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B%0D%0A41.+Kc1+Rc2%23+0-1")
+            // var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22New+York%2C+NY+USA%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BEventDate+%221956.10.07%22%5D%0D%0A%5BRound+%228%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhite+%22Donald+Byrne%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer%22%5D%0D%0A%5BECO+%22D92%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4%0D%0A7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5+%7B11.+Be2%0D%0Afollowed+by+12+O-O+would+have+been+more+prudent.+The+bishop%0D%0Amove+played+allows+a+sudden+crescendo+of+tactical+points+to+be%0D%0Auncovered+by+Fischer.+--+Wade%7D+Na4+%7B%21%7D+12.+Qa3+%7BOn+12.+Nxa4%0D%0ANxe4+and+White+faces+considerable+difficulties.%7D+Nxc3+%7BAt%0D%0Afirst+glance%2C+one+might+think+that+this+move+only+helps+White%0D%0Acreate+a+stronger+pawn+center%3B+however%2C+Fischer%27s+plan+is%0D%0Aquite+the+opposite.+By+eliminating+the+Knight+on+c3%2C+it%0D%0Abecomes+possible+to+sacrifice+the+exchange+via+Nxe4+and+smash%0D%0AWhite%27s+center%2C+while+the+King+remains+trapped+in+the+center.%7D%0D%0A13.+bxc3+Nxe4+%7BThe+natural+continuation+of+Black%27s+plan.%7D%0D%0A14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+%7B%21%21+If%0D%0Athis+is+the+game+of+the+century%2C+then+17...Be6%21%21+must+be+the%0D%0Acounter+of+the+century.+Fischer+offers+his+queen+in+exchange%0D%0Afor+a+fierce+attack+with+his+minor+pieces.+Declining+this%0D%0Aoffer+is+not+so+easy%3A+18.+Bxe6+leads+to+a+%27Philidor+Mate%27%0D%0A%28smothered+mate%29+with+...Qb5%2B+19.+Kg1+Ne2%2B+20.+Kf1+Ng3%2B%0D%0A21.+Kg1+Qf1%2B+22.+Rxf1+Ne2%23.+Other+ways+to+decline+the+queen%0D%0Aalso+run+into+trouble%3A+e.g.%2C+18.+Qxc3+Qxc5%7D+18.+Bxb6+Bxc4%2B%0D%0A19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+%7BThis+tactical+scenario%2C+where+a%0D%0Aking+is+repeatedly+revealed+to+checks%2C+is+sometimes+called+a%0D%0A%22windmill.%22%7D+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4%0D%0ARa4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1+Rxe1%0D%0A29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3+Ne4+32.+Qb8+b5+%7BEvery+piece%0D%0Aand+pawn+of+the+black+camp+is+defended.+The+white+queen+has%0D%0Anothing+to+do.%7D+33.+h4+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1%0D%0ANg3%2B+%7BNow+Byrne+is+hopelessly+entangled+in+Fischer%27s+mating%0D%0Anet.%7D+37.+Ke1+Bb4%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B%0D%0A41.+Kc1+Rc2%23+0-1")
+            var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22https%3A%2F%2Flichess.org%2FuWrwLdMD%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BWhite+%22Donald+Byrne+%28%3F%29%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer+%28%3F%29%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%5BVariant+%22Standard%22%5D%0D%0A%5BTimeControl+%22-%22%5D%0D%0A%5BECO+%22A15%22%5D%0D%0A%5BOpening+%22English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation%22%5D%0D%0A%5BTermination+%22Normal%22%5D%0D%0A%5BAnnotator+%22lichess.org%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+%7B+A15+English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation+%7D+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4+7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5%3F+%7B+%280.34+%E2%86%92+-1.36%29+Mistake.+Best+move+was+Be2.+%7D+%2811.+Be2+Nfd7+12.+Qa3+Bxf3+13.+Bxf3+e5+14.+dxe5+Qb8+15.+O-O+Nxe5+16.+Kh1+Nbc4+17.+Qb3+b5+18.+Be2+Rd8+19.+Bg3+Rxd1+20.+Rxd1+Qf8%29+11...+Na4+12.+Qa3+Nxc3+13.+bxc3+Nxe4+14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+18.+Bxb6%3F%3F+%7B+%28-1.39+%E2%86%92+-5.67%29+Blunder.+Best+move+was+Qxc3.+%7D+%2818.+Qxc3+Qxc5+19.+dxc5+Bxc3+20.+Bxe6+Rxe6+21.+g3+Bb4+22.+Rd7+Bxc5+23.+Rxb7+Rae8+24.+Rb2+Kg7+25.+h4+h6+26.+Rc2+Bb6+27.+a4+Re4%29+18...+Bxc4%2B+19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4+Ra4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1%3F+%7B+%28-6.39+%E2%86%92+-8.16%29+Mistake.+Best+move+was+Qxb7.+%7D+%2828.+Qxb7+Bh6+29.+Rb1+Bf4%2B+30.+Kg1+Nxh3%2B+31.+gxh3+Bd5+32.+Rb2+Ra1%2B+33.+Rb1+Rxb1%2B+34.+Qxb1+Bxf3+35.+Kf2+Bd5+36.+Qd1+f5+37.+Qa4+Bd2%29+28...+Rxe1+29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3%3F%21+%7B+%28-8.89+%E2%86%92+-9.63%29+Inaccuracy.+Best+move+was+Qe8.+%7D+%2831.+Qe8+b5+32.+Qb8+b4+33.+Nf3+Nd3+34.+Kg3+b3+35.+Qe8+Kg7+36.+Qd8+Bc5+37.+Kh2+Bxf3+38.+Qxd3+Rxg2%2B+39.+Kh1+Rf2%2B+40.+Kg1%29+31...+Ne4+32.+Qb8+b5+33.+h4%3F%21+%7B+%28-9.46+%E2%86%92+-11.05%29+Inaccuracy.+Best+move+was+Ne1.+%7D+%2833.+Ne1+b4+34.+Nd3+Kg7+35.+Nxb4+Bd6%2B+36.+Qxd6+Nxd6+37.+Nxa2+Bxa2+38.+Kg3+c5+39.+Kf4+f6+40.+g4+Be6+41.+Ke3+h5+42.+Kf4+c4%29+33...+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1+Ng3%2B+37.+Ke1+Bb4%2B%3F%21+%7B+%28Mate+in+4+%E2%86%92+Mate+in+4%29+Not+the+best+checkmate+sequence.+Best+move+was+Re2%2B.+%7D+%2837...+Re2%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ba3%2B+40.+Kb1+Re1%23%29+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B+41.+Kc1+Rc2%23+%7B+White+is+checkmated+%7D+0-1")
             var edited_text = remove_newlines(raw_text);
-            var game_arrays = pgn_to_fen(edited_text);  // Function result being passed as the argument for another function.
+            var variations_to_comments = handle_variations(edited_text);
+            var game_arrays = pgn_to_fen(variations_to_comments);
             var fen_array = game_arrays[0];
             var history = game_arrays[1];
             var header = game_arrays[2];

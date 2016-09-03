@@ -64,6 +64,7 @@
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <title>Chess Game Visualizer</title>
     <link href="css/chessboard.css" rel="stylesheet">
+    <link href="css/animate.min.css" rel="stylesheet">
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script> -->
     <style>
         body {
@@ -223,6 +224,11 @@
         .tooltip:hover .hoverarea {
         	visibility: visible;
         }
+        #shake_this {
+          -webkit-animation-duration: 3s;
+          -webkit-animation-delay: 2s;
+          -webkit-animation-iteration-count: infinite;
+        }
     </style>
 </head>
 <body>
@@ -233,7 +239,8 @@
                 <div id="title_div" style="width: 150px; float: left;">
                     <h1 style="padding-left: 10px; padding-top: 20px;">Chess Game Visualizer</h1>
                     <div id="beta" class="tooltip">
-                        (beta)
+                        <div id="shake_this" class="animated infinite swing">(beta)</div>
+                        <!-- <h1 class="animated infinite bounce">Example</h1> -->
                         <div class="tooltiptext">
                             <ul>
                                 <li><a href="https://github.com/Xen0phobe/chess_game_visualizer" target="_blank">github</a></li>
@@ -675,17 +682,8 @@
         };
 
         var run_it = function() {
-            // var raw_text = get_pgn_textarea();
-            // var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22New+York%2C+NY+USA%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BEventDate+%221956.10.07%22%5D%0D%0A%5BRound+%228%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhite+%22Donald+Byrne%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer%22%5D%0D%0A%5BECO+%22D92%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4%0D%0A7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5+%7B11.+Be2%0D%0Afollowed+by+12+O-O+would+have+been+more+prudent.+The+bishop%0D%0Amove+played+allows+a+sudden+crescendo+of+tactical+points+to+be%0D%0Auncovered+by+Fischer.+--+Wade%7D+Na4+%7B%21%7D+12.+Qa3+%7BOn+12.+Nxa4%0D%0ANxe4+and+White+faces+considerable+difficulties.%7D+Nxc3+%7BAt%0D%0Afirst+glance%2C+one+might+think+that+this+move+only+helps+White%0D%0Acreate+a+stronger+pawn+center%3B+however%2C+Fischer%27s+plan+is%0D%0Aquite+the+opposite.+By+eliminating+the+Knight+on+c3%2C+it%0D%0Abecomes+possible+to+sacrifice+the+exchange+via+Nxe4+and+smash%0D%0AWhite%27s+center%2C+while+the+King+remains+trapped+in+the+center.%7D%0D%0A13.+bxc3+Nxe4+%7BThe+natural+continuation+of+Black%27s+plan.%7D%0D%0A14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+%7B%21%21+If%0D%0Athis+is+the+game+of+the+century%2C+then+17...Be6%21%21+must+be+the%0D%0Acounter+of+the+century.+Fischer+offers+his+queen+in+exchange%0D%0Afor+a+fierce+attack+with+his+minor+pieces.+Declining+this%0D%0Aoffer+is+not+so+easy%3A+18.+Bxe6+leads+to+a+%27Philidor+Mate%27%0D%0A%28smothered+mate%29+with+...Qb5%2B+19.+Kg1+Ne2%2B+20.+Kf1+Ng3%2B%0D%0A21.+Kg1+Qf1%2B+22.+Rxf1+Ne2%23.+Other+ways+to+decline+the+queen%0D%0Aalso+run+into+trouble%3A+e.g.%2C+18.+Qxc3+Qxc5%7D+18.+Bxb6+Bxc4%2B%0D%0A19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+%7BThis+tactical+scenario%2C+where+a%0D%0Aking+is+repeatedly+revealed+to+checks%2C+is+sometimes+called+a%0D%0A%22windmill.%22%7D+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4%0D%0ARa4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1+Rxe1%0D%0A29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3+Ne4+32.+Qb8+b5+%7BEvery+piece%0D%0Aand+pawn+of+the+black+camp+is+defended.+The+white+queen+has%0D%0Anothing+to+do.%7D+33.+h4+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1%0D%0ANg3%2B+%7BNow+Byrne+is+hopelessly+entangled+in+Fischer%27s+mating%0D%0Anet.%7D+37.+Ke1+Bb4%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B%0D%0A41.+Kc1+Rc2%23+0-1")
-            var test_url = window.location.href;
-            // var test_url = "http://www.strategic.international&pgn=%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22https%3A%2F%2Flichess.org%2FuWrwLdMD%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BWhite+%22Donald+Byrne+%28%3F%29%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer+%28%3F%29%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%5BVariant+%22Standard%22%5D%0D%0A%5BTimeControl+%22-%22%5D%0D%0A%5BECO+%22A15%22%5D%0D%0A%5BOpening+%22English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation%22%5D%0D%0A%5BTermination+%22Normal%22%5D%0D%0A%5BAnnotator+%22lichess.org%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+%7B+A15+English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation+%7D+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4+7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5%3F+%7B+%280.34+%E2%86%92+-1.36%29+Mistake.+Best+move+was+Be2.+%7D+%2811.+Be2+Nfd7+12.+Qa3+Bxf3+13.+Bxf3+e5+14.+dxe5+Qb8+15.+O-O+Nxe5+16.+Kh1+Nbc4+17.+Qb3+b5+18.+Be2+Rd8+19.+Bg3+Rxd1+20.+Rxd1+Qf8%29+11...+Na4+12.+Qa3+Nxc3+13.+bxc3+Nxe4+14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+18.+Bxb6%3F%3F+%7B+%28-1.39+%E2%86%92+-5.67%29+Blunder.+Best+move+was+Qxc3.+%7D+%2818.+Qxc3+Qxc5+19.+dxc5+Bxc3+20.+Bxe6+Rxe6+21.+g3+Bb4+22.+Rd7+Bxc5+23.+Rxb7+Rae8+24.+Rb2+Kg7+25.+h4+h6+26.+Rc2+Bb6+27.+a4+Re4%29+18...+Bxc4%2B+19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4+Ra4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1%3F+%7B+%28-6.39+%E2%86%92+-8.16%29+Mistake.+Best+move+was+Qxb7.+%7D+%2828.+Qxb7+Bh6+29.+Rb1+Bf4%2B+30.+Kg1+Nxh3%2B+31.+gxh3+Bd5+32.+Rb2+Ra1%2B+33.+Rb1+Rxb1%2B+34.+Qxb1+Bxf3+35.+Kf2+Bd5+36.+Qd1+f5+37.+Qa4+Bd2%29+28...+Rxe1+29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3%3F%21+%7B+%28-8.89+%E2%86%92+-9.63%29+Inaccuracy.+Best+move+was+Qe8.+%7D+%2831.+Qe8+b5+32.+Qb8+b4+33.+Nf3+Nd3+34.+Kg3+b3+35.+Qe8+Kg7+36.+Qd8+Bc5+37.+Kh2+Bxf3+38.+Qxd3+Rxg2%2B+39.+Kh1+Rf2%2B+40.+Kg1%29+31...+Ne4+32.+Qb8+b5+33.+h4%3F%21+%7B+%28-9.46+%E2%86%92+-11.05%29+Inaccuracy.+Best+move+was+Ne1.+%7D+%2833.+Ne1+b4+34.+Nd3+Kg7+35.+Nxb4+Bd6%2B+36.+Qxd6+Nxd6+37.+Nxa2+Bxa2+38.+Kg3+c5+39.+Kf4+f6+40.+g4+Be6+41.+Ke3+h5+42.+Kf4+c4%29+33...+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1+Ng3%2B+37.+Ke1+Bb4%2B%3F%21+%7B+%28Mate+in+4+%E2%86%92+Mate+in+4%29+Not+the+best+checkmate+sequence.+Best+move+was+Re2%2B.+%7D+%2837...+Re2%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ba3%2B+40.+Kb1+Re1%23%29+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B+41.+Kc1+Rc2%23+%7B+White+is+checkmated+%7D+0-1";
-            // console.log("test_url is " + test_url);
-            var the_query = get_query_string("pgn", test_url);
-            console.log("the_query is " + the_query);
+            var the_query = get_query_string("pgn");
             var raw_text = url_decode(the_query);
-            // var raw_text = url_decode("%5BEvent+%22Third+Rosenwald+Trophy%22%5D%0D%0A%5BSite+%22https%3A%2F%2Flichess.org%2FuWrwLdMD%22%5D%0D%0A%5BDate+%221956.10.17%22%5D%0D%0A%5BWhite+%22Donald+Byrne+%28%3F%29%22%5D%0D%0A%5BBlack+%22Robert+James+Fischer+%28%3F%29%22%5D%0D%0A%5BResult+%220-1%22%5D%0D%0A%5BWhiteElo+%22%3F%22%5D%0D%0A%5BBlackElo+%22%3F%22%5D%0D%0A%5BPlyCount+%2282%22%5D%0D%0A%5BVariant+%22Standard%22%5D%0D%0A%5BTimeControl+%22-%22%5D%0D%0A%5BECO+%22A15%22%5D%0D%0A%5BOpening+%22English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation%22%5D%0D%0A%5BTermination+%22Normal%22%5D%0D%0A%5BAnnotator+%22lichess.org%22%5D%0D%0A%0D%0A1.+Nf3+Nf6+2.+c4+g6+%7B+A15+English+Opening%3A+Anglo-Indian+Defense%2C+King%27s+Indian+Formation+%7D+3.+Nc3+Bg7+4.+d4+O-O+5.+Bf4+d5+6.+Qb3+dxc4+7.+Qxc4+c6+8.+e4+Nbd7+9.+Rd1+Nb6+10.+Qc5+Bg4+11.+Bg5%3F+%7B+%280.34+%E2%86%92+-1.36%29+Mistake.+Best+move+was+Be2.+%7D+%2811.+Be2+Nfd7+12.+Qa3+Bxf3+13.+Bxf3+e5+14.+dxe5+Qb8+15.+O-O+Nxe5+16.+Kh1+Nbc4+17.+Qb3+b5+18.+Be2+Rd8+19.+Bg3+Rxd1+20.+Rxd1+Qf8%29+11...+Na4+12.+Qa3+Nxc3+13.+bxc3+Nxe4+14.+Bxe7+Qb6+15.+Bc4+Nxc3+16.+Bc5+Rfe8%2B+17.+Kf1+Be6+18.+Bxb6%3F%3F+%7B+%28-1.39+%E2%86%92+-5.67%29+Blunder.+Best+move+was+Qxc3.+%7D+%2818.+Qxc3+Qxc5+19.+dxc5+Bxc3+20.+Bxe6+Rxe6+21.+g3+Bb4+22.+Rd7+Bxc5+23.+Rxb7+Rae8+24.+Rb2+Kg7+25.+h4+h6+26.+Rc2+Bb6+27.+a4+Re4%29+18...+Bxc4%2B+19.+Kg1+Ne2%2B+20.+Kf1+Nxd4%2B+21.+Kg1+Ne2%2B+22.+Kf1+Nc3%2B+23.+Kg1+axb6+24.+Qb4+Ra4+25.+Qxb6+Nxd1+26.+h3+Rxa2+27.+Kh2+Nxf2+28.+Re1%3F+%7B+%28-6.39+%E2%86%92+-8.16%29+Mistake.+Best+move+was+Qxb7.+%7D+%2828.+Qxb7+Bh6+29.+Rb1+Bf4%2B+30.+Kg1+Nxh3%2B+31.+gxh3+Bd5+32.+Rb2+Ra1%2B+33.+Rb1+Rxb1%2B+34.+Qxb1+Bxf3+35.+Kf2+Bd5+36.+Qd1+f5+37.+Qa4+Bd2%29+28...+Rxe1+29.+Qd8%2B+Bf8+30.+Nxe1+Bd5+31.+Nf3%3F%21+%7B+%28-8.89+%E2%86%92+-9.63%29+Inaccuracy.+Best+move+was+Qe8.+%7D+%2831.+Qe8+b5+32.+Qb8+b4+33.+Nf3+Nd3+34.+Kg3+b3+35.+Qe8+Kg7+36.+Qd8+Bc5+37.+Kh2+Bxf3+38.+Qxd3+Rxg2%2B+39.+Kh1+Rf2%2B+40.+Kg1%29+31...+Ne4+32.+Qb8+b5+33.+h4%3F%21+%7B+%28-9.46+%E2%86%92+-11.05%29+Inaccuracy.+Best+move+was+Ne1.+%7D+%2833.+Ne1+b4+34.+Nd3+Kg7+35.+Nxb4+Bd6%2B+36.+Qxd6+Nxd6+37.+Nxa2+Bxa2+38.+Kg3+c5+39.+Kf4+f6+40.+g4+Be6+41.+Ke3+h5+42.+Kf4+c4%29+33...+h5+34.+Ne5+Kg7+35.+Kg1+Bc5%2B+36.+Kf1+Ng3%2B+37.+Ke1+Bb4%2B%3F%21+%7B+%28Mate+in+4+%E2%86%92+Mate+in+4%29+Not+the+best+checkmate+sequence.+Best+move+was+Re2%2B.+%7D+%2837...+Re2%2B+38.+Kd1+Bb3%2B+39.+Kc1+Ba3%2B+40.+Kb1+Re1%23%29+38.+Kd1+Bb3%2B+39.+Kc1+Ne2%2B+40.+Kb1+Nc3%2B+41.+Kc1+Rc2%23+%7B+White+is+checkmated+%7D+0-1")
-            // var raw_text = sessionStorage.pgn;
-            console.log("raw text is" + raw_text);
             var edited_text = remove_newlines(raw_text);
             var variations_to_comments = handle_variations(edited_text);
             var game_arrays = pgn_to_fen(variations_to_comments);

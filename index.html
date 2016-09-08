@@ -189,12 +189,26 @@
             pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');
             var chess = new Chess();
             var is_load_successful = chess.load_pgn(pgn_string);
+            // var header = chess.header();
+            var starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";  // If no fen is found in the header the default is the normal chess starting position.
+            if ("FEN" in chess.header()) {
+                if (chess.validate_fen(chess.header()["FEN"])["valid"] == true) {
+                    starting_fen = chess.header()["FEN"];
+                    console.log("FEN has been detected in the header. Adjusting starting position to " + starting_fen);
+                    chess = new Chess(starting_fen);
+                    is_load_successful = chess.load_pgn(pgn_string);
+                    ChessBoard('board', starting_fen);  // If there is a FEN string in the header, redefine the starting position to this FEN for both chess history and the board that is displayed.
+                }
+                else {
+                    console.log("The FEN in the header is invalid " + chess.header()["FEN"]);
+                }
+            }
             var history = chess.history();
             if (is_load_successful == false) {
                 var turns = Math.ceil((history.length + 1)/2);
                 console.log("Turn " + turns + " had an illegal move. Truncating game to this point.");
             }
-            var chess_history = new Chess();
+            var chess_history = new Chess(starting_fen, {sloppy: true});
             var moves = chess_history.moves();  // moves is an array of the possible moves from a given position.
             var fen_array = [];
             for (i = 0; i < history.length; i++) {
@@ -206,8 +220,8 @@
                 moves = chess_history.moves();
                 console.log("Possible moves from this position: " + moves);
                 var fen = chess_history.fen();
-                var is_valid = chess_history.validate_fen(fen);
-                console.log(is_valid);
+                // var is_valid = chess_history.validate_fen(fen);
+                // console.log(is_valid);
                 fen_array.push(fen);
             }
             var header = chess.header();
@@ -405,10 +419,6 @@
             clear_header();
             console.log(header);
             var new_header = [];
-            // $.each(header, function(key, value) {  // Javascript doesn't have a native foreach function like Python. Jquery has one.
-            //     var space = value.indexOf(" ");
-            //     header[key] = value.slice(space + 2, -2);
-            // });
             if ("Date" in header) {
                 var text2 = document.createTextNode(header["Date"]);
                 var p2 = document.createElement("DIV");
@@ -454,77 +464,31 @@
             }  
         }
 
-        function isolate_comments(pgn_string) {
-            console.log("pgn string is " + pgn_string);
-            var x = 0;
-            comment_obj = {};
-            while (true) {
-                var s1 = pgn_string.indexOf("{", x)
-                if (s1 != -1) {
-                    var s2 = pgn_string.indexOf("}", s1);
-                    var period = pgn_string.lastIndexOf(".", s1);
-                    var previous_close_bracket = pgn_string.lastIndexOf("}", s1 - 1);
-                    if (previous_close_bracket > period) {  // Check to see whether or not there is a closing bracket with an index higher than the period but lower than s1. This will indicate that there was another comment on the same turn that occured before this one.
-                        var previous_open_bracket = pgn_string.lastIndexOf("{", previous_close_bracket - 1);
-                        period = pgn_string.lastIndexOf(".", previous_open_bracket - 1);
-                    }
-                    // var beginning_of_number = pgn_string.lastIndexOf(" ", period);
-                    var beginning_of_number = 0;
-                    var go_back_characters = 1;
-                    console.log("About to attempt to isolate the beginning of the turn number.");
-                    while (true) {
-                        var is_number = pgn_string.slice(period - go_back_characters, period - go_back_characters + 1);  // Goes back character by character to find the first caracter that's not a number.
-                        console.log("is_numebr is " + is_number);
-                        is_number = String(is_number);
-                        if (is_number.search(/[0-9]/) != -1) {
-                            console.log("True");
-                        }
-                        else {
-                            console.log("False");
-                            beginning_of_number = period - go_back_characters;
-                            break;
-                        }
-                        go_back_characters += 1;
-                    }
-                    var move_end = pgn_string.lastIndexOf(" ", s1);
-                    if (move_end != s1 - 1) {
-                        move_end = s1;
-                    }
-                    var possible_move_beginning_space = pgn_string.lastIndexOf(" ", move_end - 1);
-                    var possible_move_beginning_period = pgn_string.lastIndexOf(".", move_end - 1);
-                    if (possible_move_beginning_space > possible_move_beginning_period) {
-                        var move_beginning = possible_move_beginning_space;
-                    }
-                    else {
-                        var move_beginning = possible_move_beginning_period;
-                    }
-                    // var move_beginning = pgn_string.lastIndexOf(".", move_end - 1);  // HERE!
-                    var number = pgn_string.slice(beginning_of_number + 1, period);
-                    var comment = pgn_string.slice(s1 + 1, s2);
-                    var move = pgn_string.slice(move_beginning + 1, move_end);
-                    // console.log("MOVE BEGINNING AND END " + move_beginning + " " + move_end);
-                    if (number in comment_obj) {
-                        comment_obj[number + "B"] = [move, comment];
-                    }
-                    else {
-                        comment_obj[number] = [move, comment];
-                    }
-                    x = s2;
+        function handle_comments(pgn_string) {
+            comment_obj = {};  // Create global comment_object.
+            var reg = /\{([^}]+)\}(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+\n]*? *?([\w+]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
+            while ((array = reg.exec(pgn_string)) !== null) {
+                console.log("COMMENT:" + array[1] + " " + array[2] + " " + array[3] + " " + array[4] + " " + array[5] + " " + array[6]);
+                if (array[1]) {
+                    comment_obj[0] = ["", array[1].trim()];
+                }
+                else if (array[6]){
+                    comment_obj[array[2]] = [array[3], array[4].trim()];
+                    comment_obj[array[2] + "B"] = [array[5], array[6].trim()];
                 }
                 else {
-                    break;
+                    comment_obj[array[2]] = [array[3], array[4].trim()];
                 }
             }
             console.log(comment_obj);
-
         }
 
         var remove_newlines = function(pgn_string) {
-            var index_last_bracket = pgn_string.lastIndexOf("]");
-            if (index_last_bracket != -1) {
-                var first_turn = pgn_string.indexOf("1.", index_last_bracket);
-                var just_the_moves = pgn_string.slice(first_turn);
-                var just_the_header = pgn_string.slice(0, index_last_bracket + 1)
+            if (/\[.+\](?![^{[]*[}\]])/g.test(pgn_string) == true) {  // The RegEx finds square brackets that are not already contained within other brackets. This will allow users to put brackets in their comments.
+                var just_the_moves = pgn_string.replace(/\[.+\](?![^{[]*[}\]])/g, "").trim();
+                console.log("just the moves\n" + just_the_moves);
+                var just_the_header = pgn_string.substring(0, pgn_string.indexOf(just_the_moves)).trim(); 
+                console.log("just the header:\n" + just_the_header);
                 just_the_moves = just_the_moves.replace(/(\r\n|\n|\r)/gm," "); // Removes newlines and replaces them with spaces.
                 pgn_string = just_the_header + "\n" + just_the_moves;
                 console.log("A header has been detected. The new pgn string is " + pgn_string);
@@ -563,12 +527,13 @@
             var raw_text = get_pgn_textarea();
             var edited_text = remove_newlines(raw_text);
             var variations_to_comments = handle_variations(edited_text);
+            var chess_js_friendly = handle_comments(variations_to_comments);
+            console.log("variations_to_comments is " + variations_to_comments);
             var game_arrays = pgn_to_fen(variations_to_comments);
             var fen_array = game_arrays[0];
             var history = game_arrays[1];
             var header = game_arrays[2];
             var pgn_string = game_arrays[3];
-            isolate_comments(pgn_string);
             make_header(header);
             if ($.isEmptyObject(history) != true) {
                 make_boards(fen_array, history);

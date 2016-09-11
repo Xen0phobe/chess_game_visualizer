@@ -65,7 +65,6 @@
     <title>Chess Game Visualizer</title>
     <link href="css/chessboard.css" rel="stylesheet">
     <link href="css/animate.min.css" rel="stylesheet">
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script> -->
     <style>
         body {
             font-family: "Helvetica Neue";
@@ -116,12 +115,10 @@
         }
         @font-face {
             font-family: player_two;
-            /*src: url(fonts/PressStart2P.ttf);*/
             src: url("https://fonts.gstatic.com/s/pressstart2p/v4/8Lg6LX8-ntOHUQnvQ0E7o08SWvhA5BcWCS8xVZDIH7E.woff2") format("woff");
         }
         #results_title {
             width: 870px;
-            text-align: center;
             font-family: player_two;
         }
         .stroked_text {
@@ -144,9 +141,7 @@
         #beta {
             position: absolute;
             font-family: player_two;
-            /*padding-top: 100px;*/
             font-size: 10px;
-            /*margin-left: -50px;*/
             -ms-transform: rotate(7deg); /* IE 9 */
             -webkit-transform: rotate(7deg); /* Chrome, Safari, Opera */
             transform: rotate(7deg);
@@ -156,7 +151,6 @@
         }
         .tooltip {
             position: relative;
-            /*display: inline-block;*/
         }
         .tooltip .tooltiptext {
             font-family: "Helvetica Neue";
@@ -229,10 +223,30 @@
           -webkit-animation-delay: 2s;
           -webkit-animation-iteration-count: infinite;
         }
+        dl {
+            padding: 0.5em;
+            font-size: 9px;
+            color: grey;
+        }
+        dt {
+            float: left;
+            clear: left;
+            width: 120px;
+            text-align: right;
+            font-weight: bold;
+            color: black;
+        }
+        dt:after {
+            content: ":";
+          }
+        dd {
+            margin: 0 0 0 130px;
+            padding: 0 0 0.5em 0;
+        }
     </style>
 </head>
 <body>
-    <div class="ui" id="textarea_and_board" style="display: inline-block; margin-bottom: 40px">
+    <div class="ui" id="textarea_and_board" style="display: inline-block; width: 871px; height: auto;">
         <div id="left_div" style="float: left; margin-left: 8px; margin-right: 3px; width: 300px;">
             <div id="logo_div" style="width: 300px; height: 150px; margin-bottom: 10px;">
                 <a href="http://strategic.international/" target="_blank"><img src="img/Strategic_International_Logo.png" style="width: 150px; height: 150px; float: left;"></img></a>
@@ -253,22 +267,7 @@
                     <p class="name" style="font-size: 10px; float: left; padding-right: 15px; margin-top: 5px;"><a href="http://www.progresswithchess.org/index.php?option=com_content&view=article&id=164:taylorshockey&catid=8:about-pwc" target="_blank">by: Taylor Lovell Shockey</a></p>
                 </div>
             </div>
-            <div class="ui" id="instructions" style="width: 300px;">
-                <ul class="ui">
-                    <li class="ui"> <strong>Give:</strong> Chess PGN (Portable Game Notation) in the text box.</li>
-                    <li class="ui"><strong>Get:</strong> A table of images depicting how the chessboard will look after each move.</li>
-                </ul>
-            </div>
-            <textarea class="ui" id="pgn_textarea" style="width: 294px; height: 290px;"></textarea>
-            <button class="ui" id="submit_button" type="button" onclick="run_it();" style="font-size: 14px; font-family: 'Helvetica Neue'; float: right; margin-top: 5px;">Submit</button>
         </div>
-        <div id="right_div" style="float: right; width: 500px; padding-left: 100px; margin-top: 50px;">
-            <!-- <div id="beta">(beta)</div> -->
-            <!-- <div id="feedback_and_standalone">feedback</div> -->
-<!--             <div id="feedback">feedback</div>
-            <div id="standalone">standalone</div> -->
-        </div>
-<!--        <div class="ui" id="board" style="float: right; width: 560px;"></div> --> 
     </div>
     <div class="board" id="board" style="width: 560px;"></div>
     <div id="results_title"></div>
@@ -294,22 +293,31 @@
             run_it();
         });
 
-        var get_pgn_textarea = function() {
-            pgn_textarea_value = document.getElementById("pgn_textarea").value;
-            document.getElementById("pgn_textarea").defaultValue = pgn_textarea_value;  // Set the defaultValue of the text area to be whatever was in the text area when the submit button was pressed. This prevents the text from being cleared when the page refreshes.
-            return pgn_textarea_value;
-        }
-
         var pgn_to_fen = function(pgn_string) {
-            pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');
             var chess = new Chess();
             var is_load_successful = chess.load_pgn(pgn_string);
+            var header = chess.header();
+            console.log("I'm in the pgn_to_fen method and the header is ", header)
+            var starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";  // If no fen is found in the header the default is the normal chess starting position.
+            if ("FEN" in chess.header()) {
+                if (chess.validate_fen(chess.header()["FEN"])["valid"] == true) {
+                    starting_fen = chess.header()["FEN"];
+                    console.log("FEN has been detected in the header. Adjusting starting position to " + starting_fen);
+                    chess = new Chess(starting_fen);
+                    is_load_successful = chess.load_pgn(pgn_string);
+                    ChessBoard('board', starting_fen);  // If there is a FEN string in the header, redefine the starting position to this FEN for both chess history and the board that is displayed.
+                }
+                else {
+                    console.log("The FEN in the header is invalid " + chess.header()["FEN"]);
+                    return;
+                }
+            }
             var history = chess.history();
             if (is_load_successful == false) {
                 var turns = Math.ceil((history.length + 1)/2);
                 console.log("Turn " + turns + " had an illegal move. Truncating game to this point.");
             }
-            var chess_history = new Chess();
+            var chess_history = new Chess(starting_fen, {sloppy: true});
             var moves = chess_history.moves();  // moves is an array of the possible moves from a given position.
             var fen_array = [];
             for (i = 0; i < history.length; i++) {
@@ -321,12 +329,10 @@
                 moves = chess_history.moves();
                 console.log("Possible moves from this position: " + moves);
                 var fen = chess_history.fen();
-                var is_valid = chess_history.validate_fen(fen);
-                console.log(is_valid);
                 fen_array.push(fen);
             }
             var header = chess.header();
-            // console.log("The pgn from the chess object is " + chess.pgn());
+            console.log("I'm in the pgn_to_fen method and the header is ", header)
             return [fen_array, history, header, pgn_string];
         }
 
@@ -470,38 +476,44 @@
             var have_you_created_a_comment_row = 0;
             for (i = turn_number - 2; i <= turn_number; i++) {
                 if (i in comment_obj) {
-                    if (have_you_created_a_comment_row == 0) {
-                        console.log("There's a comment in turn " + i);
+                    if (i == 0) {  // If the comment being looked at is on turn 0 - AKA before any moves - it will only display text.
+                        var comment_text = document.createTextNode(comment_obj[i][1]);
+                        var label_text = document.createTextNode("Context: ");
+                        var v = document.createElement("UL");
+                        var w = document.createElement("SPAN");
+                        var x = document.createElement("LI");
                         var y = document.createElement("TR");
-                        var row_id = "comment_row" + q;
-                        y.setAttribute("id", row_id);
-                        document.getElementById("myTable").appendChild(y);
                         var z = document.createElement("TD");
-                        var data_id = "comment" + q;
-                        z.setAttribute("id", data_id);
-                        var x = document.createElement("UL");
-                        var ul_id = "ul" + q;
-                        x.setAttribute("id", ul_id);
-                        z.appendChild(x);
+                        w.appendChild(label_text);
+                        x.appendChild(w);
+                        x.appendChild(comment_text);
+                        v.appendChild(x);
+                        z.appendChild(v);
                         y.appendChild(z);
                         document.getElementById("myTable").appendChild(y);
-                        have_you_created_a_comment_row = 1;
+                        w.setAttribute("style", "font-weight: bold; color: black;");
+                        x.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
                     }
-                    var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i][0].replace(/\?|\!/g, "") + ": ");
-                    var comment_text2 = document.createTextNode(comment_obj[i][1]);
-                    var spanling = document.createElement("SPAN");
-                    spanling.setAttribute("style", "font-weight: bold; color: black;");
-                    spanling.appendChild(comment_text1);
-                    var li = document.createElement("LI");
-                    li.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
-                    li.appendChild(spanling);
-                    li.appendChild(comment_text2);
-                    // li.appendChild(comment_text);
-                    document.getElementById("ul" + q).appendChild(li);
-                    if (i + "B" in comment_obj) {
-                        console.log("There's a move for black here as well!");
-                        var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i + "B"][0] + ": ");
-                        var comment_text2 = document.createTextNode(comment_obj[i + "B"][1]);
+                    else {
+                        if (have_you_created_a_comment_row == 0) {
+                            console.log("There's a comment in turn " + i);
+                            var y = document.createElement("TR");
+                            var row_id = "comment_row" + q;
+                            y.setAttribute("id", row_id);
+                            // document.getElementById("myTable").appendChild(y);
+                            var z = document.createElement("TD");
+                            var data_id = "comment" + q;
+                            z.setAttribute("id", data_id);
+                            var x = document.createElement("UL");
+                            var ul_id = "ul" + q;
+                            x.setAttribute("id", ul_id);
+                            z.appendChild(x);
+                            y.appendChild(z);
+                            document.getElementById("myTable").appendChild(y);
+                            have_you_created_a_comment_row = 1;
+                        }
+                        var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i][0].replace(/\?|\!/g, "") + ": ");
+                        var comment_text2 = document.createTextNode(comment_obj[i][1]);
                         var spanling = document.createElement("SPAN");
                         spanling.setAttribute("style", "font-weight: bold; color: black;");
                         spanling.appendChild(comment_text1);
@@ -511,6 +523,20 @@
                         li.appendChild(comment_text2);
                         // li.appendChild(comment_text);
                         document.getElementById("ul" + q).appendChild(li);
+                        if (i + "B" in comment_obj) {
+                            console.log("There's a move for black here as well!");
+                            var comment_text1 = document.createTextNode("Turn " + i + " move " + comment_obj[i + "B"][0] + ": ");
+                            var comment_text2 = document.createTextNode(comment_obj[i + "B"][1]);
+                            var spanling = document.createElement("SPAN");
+                            spanling.setAttribute("style", "font-weight: bold; color: black;");
+                            spanling.appendChild(comment_text1);
+                            var li = document.createElement("LI");
+                            li.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
+                            li.appendChild(spanling);
+                            li.appendChild(comment_text2);
+                            // li.appendChild(comment_text);
+                            document.getElementById("ul" + q).appendChild(li);
+                        }
                     }
                 }
             }
@@ -518,21 +544,7 @@
 
         function make_header(header) {
             clear_header();
-            console.log(header);
-            var new_header = [];
-            // $.each(header, function(key, value) {  // Javascript doesn't have a native foreach function like Python. Jquery has one.
-            //     var space = value.indexOf(" ");
-            //     header[key] = value.slice(space + 2, -2);
-            // });
-            if ("Date" in header) {
-                var text2 = document.createTextNode(header["Date"]);
-                var p2 = document.createElement("DIV");
-                p2.setAttribute("id", "results_header_p2");
-                p2.setAttribute("class", "grey_text");
-                p2.setAttribute("style", "align: center; position: relative; display: inline-block; width: 870px; margin-bottom: 8px;");
-                p2.appendChild(text2);
-                document.getElementById("results_title").appendChild(p2); 
-            };
+            console.log("I'm in the make_header function and header is ", header);
             if ("White" in header && "Black" in header) {
                 var text_white = document.createTextNode(header["White"]);
                 var text_black = document.createTextNode(header["Black"]);
@@ -548,131 +560,110 @@
                 div_vs.setAttribute("class", "grey_text");
                 div_vs.setAttribute("style", "display: inline-block; width: 50px; align: center; margin: 0 auto;");
                 div_vs.appendChild(text_vs);
-                var p = document.createElement("DIV");
-                p.setAttribute("id", "results_header_p");
-                p.setAttribute("style", "text-align: center; width: 870px; margin-bottom: 40px;");
-                p.appendChild(div_white);
-                p.appendChild(div_vs);
-                p.appendChild(div_black);
-                document.getElementById("results_title").appendChild(p);
+                var d1 = document.createElement("DIV");
+                d1.setAttribute("id", "results_header_d1");
+                d1.setAttribute("style", "text-align: center; width: 870px; display: inline-block; margin-bottom: 20px;");
+                // d1.setAttribute("style", "text-align: center; width: 870px; height: auto;");
+                d1.appendChild(div_white);
+                d1.appendChild(div_vs);
+                d1.appendChild(div_black);
+                document.getElementById("results_title").appendChild(d1);
+                delete header["Black"];
+                delete header["White"];
+            };
+            if ($.isEmptyObject(header) != true) {
+                var dl = document.createElement("DL");
+                var d2 = document.createElement("DIV");
+                d2.setAttribute("id", "results_header_d2");
+                $.each(header, function(key, value) {
+                    if (value != "?" && value != "") {
+                        var key_text = document.createTextNode(key);
+                        var val_text = document.createTextNode(value);
+                        var dt = document.createElement("DT");
+                        var dd = document.createElement("DD");
+                        dt.appendChild(key_text);
+                        dd.appendChild(val_text);
+                        dl.appendChild(dt);
+                        dl.appendChild(dd);
+                    };
+                });
+                d2.appendChild(dl);
+                document.getElementById("results_title").appendChild(d2);
             };
         }
 
         function clear_header() {
-            var header_elementExists = document.getElementById("results_header_p");
-            var header2_elementExists = document.getElementById("results_header_p2");
-            if (header_elementExists != null) {
-                document.getElementById("results_header_p").remove();
-            }
-            if (header2_elementExists != null) {
-                document.getElementById("results_header_p2").remove();
-            }  
-        }
+            $("DIV[id^='results_header']").each(function(key, value) {  // Finds all div element that have an id starting with "results_header".
+                console.log("clear_header: ", key, value);
+                this.remove();  // Removing the elements with this id automatically removes any children of this element.
+            });  
+        } 
 
-        function isolate_comments(pgn_string) {
-            console.log("pgn string is " + pgn_string);
-            var x = 0;
-            comment_obj = {};
-            while (true) {
-                var s1 = pgn_string.indexOf("{", x)
-                if (s1 != -1) {
-                    var s2 = pgn_string.indexOf("}", s1);
-                    var period = pgn_string.lastIndexOf(".", s1);
-                    var previous_close_bracket = pgn_string.lastIndexOf("}", s1 - 1);
-                    if (previous_close_bracket > period) {  // Check to see whether or not there is a closing bracket with an index higher than the period but lower than s1. This will indicate that there was another comment on the same turn that occured before this one.
-                        var previous_open_bracket = pgn_string.lastIndexOf("{", previous_close_bracket - 1);
-                        period = pgn_string.lastIndexOf(".", previous_open_bracket - 1);
-                    }
-                    // var beginning_of_number = pgn_string.lastIndexOf(" ", period);
-                    var beginning_of_number = 0;
-                    var go_back_characters = 1;
-                    console.log("About to attempt to isolate the beginning of the turn number.");
-                    while (true) {
-                        var is_number = pgn_string.slice(period - go_back_characters, period - go_back_characters + 1);  // Goes back character by character to find the first caracter that's not a number.
-                        console.log("is_numebr is " + is_number);
-                        is_number = String(is_number);
-                        if (is_number.search(/[0-9]/) != -1) {
-                            console.log("True");
-                        }
-                        else {
-                            console.log("False");
-                            beginning_of_number = period - go_back_characters;
-                            break;
-                        }
-                        go_back_characters += 1;
-                    }
-                    var move_end = pgn_string.lastIndexOf(" ", s1);
-                    if (move_end != s1 - 1) {
-                        move_end = s1;
-                    }
-                    var possible_move_beginning_space = pgn_string.lastIndexOf(" ", move_end - 1);
-                    var possible_move_beginning_period = pgn_string.lastIndexOf(".", move_end - 1);
-                    if (possible_move_beginning_space > possible_move_beginning_period) {
-                        var move_beginning = possible_move_beginning_space;
-                    }
-                    else {
-                        var move_beginning = possible_move_beginning_period;
-                    }
-                    // var move_beginning = pgn_string.lastIndexOf(".", move_end - 1);  // HERE!
-                    var number = pgn_string.slice(beginning_of_number + 1, period);
-                    var comment = pgn_string.slice(s1 + 1, s2);
-                    var move = pgn_string.slice(move_beginning + 1, move_end);
-                    // console.log("MOVE BEGINNING AND END " + move_beginning + " " + move_end);
-                    if (number in comment_obj) {
-                        comment_obj[number + "B"] = [move, comment];
-                    }
-                    else {
-                        comment_obj[number] = [move, comment];
-                    }
-                    x = s2;
+        function handle_comments(just_the_moves) {
+            comment_obj = {};  // Create global comment_object.
+            var new_just_the_moves = just_the_moves;
+            var reg = /(?:\{([^}]+)\})(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+!?\n#]*? *?([\w+!?#]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+!?#]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
+            while ((array = reg.exec(just_the_moves)) !== null) {
+                console.log("COMMENT:" + array[1] + " " + array[2] + " " + array[3] + " " + array[4] + " " + array[5] + " " + array[6]);
+                if (array[1]) {
+                    var pre_comment = "{" + array[1] + "}";
+                    new_just_the_moves = just_the_moves.replace(pre_comment, "").trim();  // Removes any pre_comments from the move list so chess.js doesn't break.
+                    comment_obj[0] = ["", array[1].trim()];
+                }
+                else if (array[6]){
+                    comment_obj[array[2]] = [array[3], array[4].trim()];
+                    comment_obj[array[2] + "B"] = [array[5], array[6].trim()];
                 }
                 else {
-                    break;
+                    comment_obj[array[2]] = [array[3], array[4].trim()];
                 }
             }
-            console.log(comment_obj);
-
+            console.log("comment_obj is ", comment_obj);
+            console.log("new_just_the_moves is ", new_just_the_moves);
+            return new_just_the_moves;
         }
 
-        var remove_newlines = function(pgn_string) {
-            var index_last_bracket = pgn_string.lastIndexOf("]");
-            if (index_last_bracket != -1) {
-                var first_turn = pgn_string.indexOf("1.", index_last_bracket);
-                var just_the_moves = pgn_string.slice(first_turn);
-                var just_the_header = pgn_string.slice(0, index_last_bracket + 1)
+        var seperate_and_homogenize = function(pgn_string) {
+            var just_the_moves = "";
+            var just_the_header = "";
+            var header_obj = {};
+            pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');  // Replaces left and right quotation marks with flat quotation marks.
+            pgn_string = pgn_string.replace(/(?:[0-9]+\.\.\.)(?![^({[]*[}\])])/g, "");  // Removes ellipsis found outside of brackets.
+            pgn_string = pgn_string.replace(/([0-9] *\- *[0-9])(?![^{[]*[}\]])/g, "{(Score: $&)}");  // Turns the score into a comment if it's found outside of brackets.
+            if (/\[.+\](?![^{}]*\}|[^[\]]*\])/g.test(pgn_string) == true) {  // The RegEx finds square brackets that are not already contained within other brackets. This will allow users to put brackets in their comments.
+                console.log("A header has been detected.");
+                just_the_moves = pgn_string.replace(/\[.+\](?![^{}]*\}|[^[\]]*\])/g, "").trim();
+                just_the_header = pgn_string.substring(0, pgn_string.indexOf(just_the_moves)).trim();
+                just_the_header = just_the_header.replace(/ *\(\?\) */g, "");  // Removes question marks inside parenthesees from the header. 
                 just_the_moves = just_the_moves.replace(/(\r\n|\n|\r)/gm," "); // Removes newlines and replaces them with spaces.
                 pgn_string = just_the_header + "\n" + just_the_moves;
-                console.log("A header has been detected. The new pgn string is " + pgn_string);
+                console.log("just the header:\n" + just_the_header);
+                console.log("just the moves\n" + just_the_moves);
+                console.log("Converting the header into an object");
+                var reg = /\[ *([A-z]+) *\"(.*)\" *\]/g;  // Extracts two capture groups from the header 1 - header key 2 - header value.
+                while ((array = reg.exec(just_the_header)) !== null) {
+                    header_obj[array[1]] = array[2];
+                }
             }
             else {
                 pgn_string = pgn_string.replace(/(\r\n|\n|\r)/gm," ");
-                console.log("No header has been detected. The new pgn string is " + pgn_string);
+                just_the_moves = pgn_string;
+                console.log("No header has been detected.");
             }
-            return pgn_string;
+            return [pgn_string, just_the_header, just_the_moves, header_obj];
         }
 
         function url_decode(str) {
            return decodeURIComponent((str+'').replace(/\+/g, '%20'));
         }
 
-        function handle_variations(pgn_string) {
-        	var reg = /(} *\([^)]*\))+/g;
-        	var new_pgn_string = pgn_string;
-        	while ((array = reg.exec(pgn_string)) !== null) {
-        		console.log(array.index + " " + array[0] + " " + (array.index + array[0].length));
-        		new_pgn_string = new_pgn_string.replace_at_index(array.index, " ");
-        		new_pgn_string = new_pgn_string.replace_at_index(array.index + array[0].length, "}")
-        	}
-        	new_pgn_string = new_pgn_string.replace(/  /g, "");
-        	new_pgn_string = new_pgn_string.replace(/\)\}/g, ") } ");
-        	new_pgn_string = new_pgn_string.replace(/\} [0-9]*\.\.\./g, "}");
-        	console.log(new_pgn_string);
-        	return new_pgn_string;
+        function handle_variations(just_the_moves) {
+            var reg = /(\([^)]*\))+/g;
+            var new_just_the_moves = just_the_moves;
+            new_just_the_moves = new_just_the_moves.replace(/(\([^)]*?\))(?![^{}]*\})/g, "{$&}").replace(/} *{/g, " ");  // Puts brackets around variations to turn them into comments and then merges any two comments that are next to one another.
+            console.log(new_just_the_moves);
+            return new_just_the_moves;
         }
-
-		String.prototype.replace_at_index = function(index, character) {
-		    return this.substr(0, index) + character + this.substr(index+character.length);
-		}
 
         var get_query_string = function (field, url) {
             var href = url ? url : window.location.href;
@@ -684,15 +675,20 @@
         var run_it = function() {
             var the_query = get_query_string("pgn");
             var raw_text = url_decode(the_query);
-            var edited_text = remove_newlines(raw_text);
-            var variations_to_comments = handle_variations(edited_text);
-            var game_arrays = pgn_to_fen(variations_to_comments);
+            var seperate_array = seperate_and_homogenize(raw_text);
+            var just_the_header = seperate_array[1];
+            var just_the_moves = seperate_array[2];
+            var header_obj = seperate_array[3];
+            just_the_moves = handle_variations(just_the_moves);
+            just_the_moves = handle_comments(just_the_moves);
+            make_header(header_obj);
+            var edited_pgn = just_the_header + "\n" + just_the_moves;
+            console.log("Run_it: edited_pgn is", edited_pgn);
+            var game_arrays = pgn_to_fen(edited_pgn);
+            console.log("I'm in the run_it function and game_arrays is ", game_arrays); 
             var fen_array = game_arrays[0];
             var history = game_arrays[1];
-            var header = game_arrays[2];
             var pgn_string = game_arrays[3];
-            isolate_comments(pgn_string);
-            make_header(header);
             if ($.isEmptyObject(history) != true) {
                 make_boards(fen_array, history);
             }

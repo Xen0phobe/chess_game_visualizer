@@ -133,7 +133,9 @@
             color: grey;
         }
         dl {
-            border: 3px double #ccc;
+            /*border: 3px double #ccc;*/
+            /*padding-top: 40px;*/
+            border: 3px line #ccc;
             padding: 0.5em;
             font-size: 9px;
             color: grey;
@@ -401,6 +403,7 @@
                         z.appendChild(x);
                         y.appendChild(z);
                         document.getElementById("myTable").appendChild(y);
+                        x.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
                     }
                     else {
                         if (have_you_created_a_comment_row == 0) {
@@ -471,6 +474,7 @@
                 var d1 = document.createElement("DIV");
                 d1.setAttribute("id", "results_header_d1");
                 d1.setAttribute("style", "text-align: center; width: 870px; margin-bottom: 40px;");
+                // d1.setAttribute("style", "text-align: center; width: 870px; height: auto;");
                 d1.appendChild(div_white);
                 d1.appendChild(div_vs);
                 d1.appendChild(div_black);
@@ -517,7 +521,7 @@
         function handle_comments(just_the_moves) {
             comment_obj = {};  // Create global comment_object.
             var new_just_the_moves = just_the_moves;
-            var reg = /\{([^}]+)\}(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+!\n]*? *?([\w+!]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+!]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
+            var reg = /(?:\{([^}]+)\})(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+!?\n#]*? *?([\w+!?#]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+!?#]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
             while ((array = reg.exec(just_the_moves)) !== null) {
                 console.log("COMMENT:" + array[1] + " " + array[2] + " " + array[3] + " " + array[4] + " " + array[5] + " " + array[6]);
                 if (array[1]) {
@@ -544,10 +548,12 @@
             var header_obj = {};
             pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');  // Replaces left and right quotation marks with flat quotation marks.
             pgn_string = pgn_string.replace(/(?:[0-9]\.\.\.)(?![^{[]*[}\]])/g, "");  // Removes ellipsis found outside of brackets.
+            pgn_string = pgn_string.replace(/([0-9] *\- *[0-9])(?![^{[]*[}\]])/g, "{(Score: $&)}");  // Turns the score into a comment if it's found outside of brackets.
             if (/\[.+\](?![^{[]*[}\]])/g.test(pgn_string) == true) {  // The RegEx finds square brackets that are not already contained within other brackets. This will allow users to put brackets in their comments.
                 console.log("A header has been detected.");
                 just_the_moves = pgn_string.replace(/\[.+\](?![^{[]*[}\]])/g, "").trim();
-                just_the_header = pgn_string.substring(0, pgn_string.indexOf(just_the_moves)).trim(); 
+                just_the_header = pgn_string.substring(0, pgn_string.indexOf(just_the_moves)).trim();
+                just_the_header = just_the_header.replace(/ *\(\?\) */g, "");  // Removes question marks inside parenthesees from the header. 
                 just_the_moves = just_the_moves.replace(/(\r\n|\n|\r)/gm," "); // Removes newlines and replaces them with spaces.
                 pgn_string = just_the_header + "\n" + just_the_moves;
                 console.log("just the header:\n" + just_the_header);

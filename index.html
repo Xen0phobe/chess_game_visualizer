@@ -133,9 +133,6 @@
             color: grey;
         }
         dl {
-            /*border: 3px double #ccc;*/
-            /*padding-top: 40px;*/
-            border: 3px line #ccc;
             padding: 0.5em;
             font-size: 9px;
             color: grey;
@@ -155,10 +152,13 @@
             margin: 0 0 0 110px;
             padding: 0 0 0.5em 0;
         }
+        #results_title {
+            height: auto;
+        }
     </style>
 </head>
 <body>
-    <div id="textarea_and_board" style="display: inline-block; margin-bottom: 40px">
+    <div id="textarea_and_board" style="display: inline-block; margin-bottom: 40px; width: 871px; height: 600px;">
         <div id="left_div" style="float: left; margin-left: 8px; margin-right: 3px; width: 300px; height: 600px;">
             <div id="logo_div" style="width: 300px; height: 150px; margin-bottom: 10px;">
                 <a href="http://strategic.international/" target="_blank"><img src="img/Strategic_International_Logo.png" style="width: 150px; height: 150px; float: left;"></img></a>
@@ -177,7 +177,6 @@
             <button id="submit_button" type="button" onclick="run_it();" style="font-size: 14px; font-family: 'Helvetica Neue'; float: right; margin-top: 5px;">Submit</button>
         </div>
         <div id="board" style="float: right; width: 560px;"></div>
-        <!-- <div id="results" style="width: 596px; height: 20px; background-color: lightgrey;"></div> -->
     </div>
     <div id="results_title"></div>
     <div id="results" style="width: 870px; margin-left: 0px; margin-top: 5px;"></div>
@@ -396,13 +395,20 @@
                 if (i in comment_obj) {
                     if (i == 0) {  // If the comment being looked at is on turn 0 - AKA before any moves - it will only display text.
                         var comment_text = document.createTextNode(comment_obj[i][1]);
-                        var x = document.createElement("P");
+                        var label_text = document.createTextNode("Context: ");
+                        var v = document.createElement("UL");
+                        var w = document.createElement("SPAN");
+                        var x = document.createElement("LI");
                         var y = document.createElement("TR");
                         var z = document.createElement("TD");
+                        w.appendChild(label_text);
+                        x.appendChild(w);
                         x.appendChild(comment_text);
-                        z.appendChild(x);
+                        v.appendChild(x);
+                        z.appendChild(v);
                         y.appendChild(z);
                         document.getElementById("myTable").appendChild(y);
+                        w.setAttribute("style", "font-weight: bold; color: black;");
                         x.setAttribute("style", "margin: 0; margin-bottom: 6px; padding: 0; color: grey; font-style: italic;");
                     }
                     else {
@@ -473,7 +479,7 @@
                 div_vs.appendChild(text_vs);
                 var d1 = document.createElement("DIV");
                 d1.setAttribute("id", "results_header_d1");
-                d1.setAttribute("style", "text-align: center; width: 870px; margin-bottom: 40px;");
+                d1.setAttribute("style", "text-align: center; width: 870px; display: inline-block; margin-bottom: 20px;");
                 // d1.setAttribute("style", "text-align: center; width: 870px; height: auto;");
                 d1.appendChild(div_white);
                 d1.appendChild(div_vs);
@@ -547,7 +553,8 @@
             var just_the_header = "";
             var header_obj = {};
             pgn_string = pgn_string.replace(/[\u201C\u201D]/g, '"');  // Replaces left and right quotation marks with flat quotation marks.
-            pgn_string = pgn_string.replace(/(?:[0-9]\.\.\.)(?![^{[]*[}\]])/g, "");  // Removes ellipsis found outside of brackets.
+            // pgn_string = pgn_string.replace(/(?:[0-9]+\.\.\.)(?![^{[]*[}\]])/g, "");  // Removes ellipsis found outside of brackets.
+            pgn_string = pgn_string.replace(/(?:[0-9]+\.\.\.)(?![^({[]*[}\])])/g, "");
             pgn_string = pgn_string.replace(/([0-9] *\- *[0-9])(?![^{[]*[}\]])/g, "{(Score: $&)}");  // Turns the score into a comment if it's found outside of brackets.
             if (/\[.+\](?![^{[]*[}\]])/g.test(pgn_string) == true) {  // The RegEx finds square brackets that are not already contained within other brackets. This will allow users to put brackets in their comments.
                 console.log("A header has been detected.");
@@ -579,7 +586,8 @@
         function handle_variations(just_the_moves) {
             var reg = /(\([^)]*\))+/g;
             var new_just_the_moves = just_the_moves;
-            new_just_the_moves = new_just_the_moves.replace(/(?:\(.*\))(?![^{[]*[}\]])/g, "{$&}").replace(/} *{/g, " ");  // Puts brackets around variations to turn them into comments and then merges any two comments that are next to one another.
+            // new_just_the_moves = new_just_the_moves.replace(/(?:\(.*\))(?![^{[]*[}\]])/g, "{$&}").replace(/} *{/g, " ");  // Puts brackets around variations to turn them into comments and then merges any two comments that are next to one another.
+            new_just_the_moves = new_just_the_moves.replace(/(\([^)]*?\))(?![^{}]*\})/g, "{$&}").replace(/} *{/g, " ");  // Puts brackets around variations to turn them into comments and then merges any two comments that are next to one another.
             console.log(new_just_the_moves);
             return new_just_the_moves;
         }

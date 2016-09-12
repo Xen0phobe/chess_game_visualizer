@@ -602,7 +602,7 @@
         function handle_comments(just_the_moves) {
             comment_obj = {};  // Create global comment_object.
             var new_just_the_moves = just_the_moves;
-            var reg = /(?:\{([^}]+)\})(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+!?\n#]*? *?([\w+!?#]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+!?#]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
+            var reg = /(?:\{([^}]+)\})(?![^{[]*[}\]])|([0-9]+)\.(?![^{[]*[}\]]) *?[\w+!?\n\-#]*? *?([\w+!?\n\-#]+)(?= *\{) *?\{([^}]+)\}(?: *?([\w+!?\n\-#]*)? *?\{([^}]+)\})*/g;  // Creates six capture groups: 1 - Comments by themselves (before the first move). 2 - Turn number. 3 - Move one. 4 - Comment one. 5 - Move two. 6 - Comment two.
             while ((array = reg.exec(just_the_moves)) !== null) {
                 console.log("COMMENT:" + array[1] + " " + array[2] + " " + array[3] + " " + array[4] + " " + array[5] + " " + array[6]);
                 if (array[1]) {
